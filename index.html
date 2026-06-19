@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/dcr.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#161616" />
+  <meta name="description"
+    content="DECRED.SUPPLY — Live cinematic dashboard for the Decred network. Network health, staking, treasury, and more." />
+  <title>DECRED.SUPPLY — Network Dashboard</title>
+  <!-- Social / link previews -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://decred.supply/" />
+  <meta property="og:title" content="DECRED.SUPPLY — Network Dashboard" />
+  <meta property="og:description"
+    content="Live dashboard for the Decred network: protocol-enforced lockup, staking, treasury, and cross-chain supply comparisons." />
+  <meta name="twitter:card" content="summary" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/styles.css" />
+</head>
+
+<body>
+  <!-- ▸ LOADING / ERROR SPLASH -->
+  <div class="splash" id="splash">Connecting to Decred Network<span class="splash-dots"></span></div>
+
+  <!-- ▸ DASHBOARD (revealed once data resolves) -->
+  <main class="page" id="dashboard" hidden>
+
+    <!-- ▸ HEADER -->
+    <header class="header fade-in">
+      <div class="logo">
+        <img src="/assets/images/decred.svg" alt="Decred" class="logo-img" />
+        <div class="logo-tag"><span class="logo-sep">/</span> <span class="logo-dim">Supply Report</span></div>
+      </div>
+      <div class="header-meta">
+        <span id="header-status"><span class="live-dot"></span>Live &middot; dcrdata.decred.org</span><br />
+        Block #<span id="block-height">—</span> &middot; <span id="current-date">—</span>
+      </div>
+    </header>
+
+    <!-- ▸ HERO -->
+    <section class="hero fade-in delay-1">
+      <div class="hero-number" id="hero-number">
+        <span id="hero-pct-value">0.0</span><span class="hero-pct">%</span>
+      </div>
+      <div class="hero-word">Locked</div>
+      <div class="hero-sub">
+        Of <span id="hero-total-mined">—</span>M total mined supply, only <span id="hero-liquid">—</span>M DCR is liquid.
+      </div>
+    </section>
+
+    <!-- ▸ THE RATIO -->
+    <div class="ratio-block fade-in delay-2">
+      <p class="ratio-text">
+        For every 1 DCR on the open market,<br />
+        <strong class="ratio-accent"><span id="ratio-locked">—</span> DCR are locked by holders</strong><br />
+        and strictly unavailable for sale.
+      </p>
+    </div>
+
+    <!-- ▸ TICKER -->
+    <div class="ticker fade-in delay-3">
+      <div class="ticker-item">DCR <span class="v" id="tk-price">—</span></div>
+      <div class="ticker-item">MCap <span class="v" id="tk-mcap">—</span></div>
+      <div class="ticker-item">Vol 24h <span class="v" id="tk-vol">—</span></div>
+      <div class="ticker-item">Liquid MCap <span class="v" id="tk-liqmcap">—</span></div>
+      <div class="ticker-item">Next Emission Drop <span class="v" id="tk-emission">—</span></div>
+    </div>
+
+    <!-- ▸ SQUEEZE BAR -->
+    <section class="squeeze-section fade-in delay-4">
+      <div class="section-label">21,000,000 DCR — Total Supply Allocation</div>
+      <div class="squeeze-stage">
+        <div class="sq-liquid-label" id="sq-liquid-label">▼ <span id="sq-liquid-val">—</span>M LIQUID</div>
+        <div class="sq-treasury-label" id="sq-treasury-label">
+          <span id="sq-treasury-val">—</span>K
+          <div class="sq-treasury-marker"></div>
+        </div>
+        <div class="squeeze-bar">
+          <div class="sq-segment sq-staked" id="sq-staked" style="width:0%">
+            <span class="sq-label"><b id="sq-staked-val">—</b> Staked</span>
+          </div>
+          <div class="sq-segment sq-treasury" id="sq-treasury" style="width:0%"></div>
+          <div class="sq-segment sq-liquid" id="sq-liquid" style="width:0%"></div>
+          <div class="sq-segment sq-unmined">
+            <span class="sq-label sq-label-right"><b id="sq-unmined-val">—</b> Unmined</span>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-sw stk"></div>Staked in Tickets (<span id="lg-staked">—</span>%)</div>
+        <div class="legend-item"><div class="legend-sw trs"></div>Treasury (<span id="lg-treasury">—</span>%)</div>
+        <div class="legend-item"><div class="legend-sw liq"></div>Liquid — Available (<span id="lg-liquid">—</span>%)</div>
+        <div class="legend-item"><div class="legend-sw unm"></div>Not Yet Mined</div>
+      </div>
+    </section>
+
+    <!-- ▸ HISTORICAL CHART -->
+    <section class="chart-section fade-in delay-5" id="chart-section">
+      <div class="section-label">The Squeeze Over Time</div>
+      <div class="chart-wrap">
+        <div class="chart-loading" id="chart-loading">
+          <div class="chart-loading-bar"></div>
+          <span>Loading historical data…</span>
+        </div>
+        <canvas id="chart-canvas" hidden role="img"
+          aria-label="Line chart of Decred locked, circulating, and liquid supply over time"></canvas>
+        <div class="chart-legend" id="chart-legend" hidden>
+          <div class="chart-legend-item"><div class="chart-legend-sw chart-sw-locked"></div><span>Locked (Staked + Treasury)</span></div>
+          <div class="chart-legend-item"><div class="chart-legend-sw chart-sw-circ"></div><span>Circulating</span></div>
+          <div class="chart-legend-item"><div class="chart-legend-sw chart-sw-liquid"></div><span>Liquid — Available</span></div>
+        </div>
+      </div>
+      <div class="compare-note">
+        Locked supply has been trending upward for years. Every ticket purchased further compresses what's available on the market.
+      </div>
+    </section>
+
+    <!-- ▸ WHY THIS MATTERS -->
+    <section class="why-section fade-in delay-5">
+      <div class="section-label">Why This Matters</div>
+      <div class="why-grid">
+        <div class="why-cell">
+          <div class="why-num">01</div>
+          <div class="why-title">Protocol-Enforced Lockup</div>
+          <div class="why-desc">
+            Staked DCR isn't a promise — it's <strong>code</strong>.
+            Tickets lock coins for up to 142 days with no early exit. This isn't voluntary holding; it's a binding protocol constraint.
+          </div>
+        </div>
+        <div class="why-cell">
+          <div class="why-num">02</div>
+          <div class="why-title">No Unlock Schedules</div>
+          <div class="why-desc">
+            Zero VC allocations. Zero team tokens vesting.
+            No ICO. Every DCR in existence was either <strong>mined or earned</strong> through stakeholder-approved work.
+          </div>
+        </div>
+        <div class="why-cell">
+          <div class="why-num">03</div>
+          <div class="why-title">Buying Pressure ≠ Selling Supply</div>
+          <div class="why-desc">
+            When <span id="why-locked-pct">—</span>% of supply can't be sold, even modest demand has outsized price impact.
+            The <strong>liquid market cap is $<span id="why-liq-mcap">—</span>M</strong> — not $<span id="why-mcap">—</span>M.
+          </div>
+        </div>
+        <div class="why-cell">
+          <div class="why-num">04</div>
+          <div class="why-title">The Squeeze Tightens</div>
+          <div class="why-desc">
+            The ticket pool actively absorbs newly mined coins.
+            Stake participation has been <strong>trending upward for years</strong>.
+            Every ticket purchased compresses liquid supply further.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ▸ COMPARISON — CROSS-CHAIN -->
+    <section class="compare-section fade-in delay-6">
+      <div class="section-label">Protocol-Locked Supply — Cross-Chain</div>
+      <div class="table-wrapper">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th style="width:120px">Asset</th>
+              <th style="width:90px">Locked</th>
+              <th>Visualization</th>
+              <th style="width:200px">Lock Mechanism</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td class="asset-name">Decred</td>
+              <td class="cmp-strong"><span id="cmp-dcr-pct">—</span>%</td>
+              <td>
+                <div class="compare-bar-wrap"><div class="compare-bar-fill fill-dcr" id="cmp-dcr-bar" style="width:0%"></div></div>
+              </td>
+              <td>PoS tickets + treasury. 142-day lock. No early exit.</td>
+            </tr>
+            <tr>
+              <td class="asset-name">Ethereum</td>
+              <td>28.3%</td>
+              <td><div class="compare-bar-wrap"><div class="compare-bar-fill fill-other" data-fill="28.3" style="width:0%"></div></div></td>
+              <td>Beacon chain staking. Withdrawable post-Shanghai.</td>
+            </tr>
+            <tr>
+              <td class="asset-name">Solana</td>
+              <td>65.1%</td>
+              <td><div class="compare-bar-wrap"><div class="compare-bar-fill fill-other" data-fill="65.1" style="width:0%"></div></div></td>
+              <td>Delegated PoS. ~2-day unlock period.</td>
+            </tr>
+            <tr>
+              <td class="asset-name">Bitcoin</td>
+              <td>0%</td>
+              <td><div class="compare-bar-wrap"><div class="compare-bar-fill fill-other" data-fill="0" style="width:0%"></div></div></td>
+              <td>No protocol lock. All supply is technically liquid.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="compare-note">
+        Decred's lock is the most rigid: no delegation, no liquid staking derivatives, no early withdrawal. Coins are fully inaccessible until the ticket votes or expires.
+      </div>
+    </section>
+
+    <!-- ▸ DILUTION DANGER -->
+    <section class="compare-section fade-in delay-6">
+      <div class="section-label">Dilution Danger — Fair Distribution vs. Corporate Extraction</div>
+      <div class="table-wrapper">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th style="width:120px">Asset</th>
+              <th style="width:90px">Circulating</th>
+              <th style="width:120px">Market Cap</th>
+              <th style="width:120px">FDV</th>
+              <th>Upcoming Unlocks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td class="asset-name">Decred</td>
+              <td class="cmp-strong"><span id="dil-dcr-circ">—</span>%</td>
+              <td>$<span id="dil-dcr-mcap">—</span>M</td>
+              <td>$<span id="dil-dcr-fdv">—</span>M</td>
+              <td>Organic block emission only. No VC unlocks.</td>
+            </tr>
+            <tr>
+              <td class="asset-name">Sui (SUI)</td>
+              <td>34.5%</td><td>~$3.7B</td><td>~$16.0B</td><td>Major monthly unlocks of ~44M SUI</td>
+            </tr>
+            <tr>
+              <td class="asset-name">Aptos (APT)</td>
+              <td>35.0%</td><td>~$4.5B</td><td>~$13.0B</td><td>Monthly unlocks of ~11.3M APT</td>
+            </tr>
+            <tr>
+              <td class="asset-name">Celestia (TIA)</td>
+              <td>15.0%</td><td>~$500M</td><td>~$3.3B</td><td>Massive internal allocation unlocks</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ▸ NETWORK FUNDAMENTALS -->
+    <section class="metrics-section fade-in delay-7">
+      <div class="section-label">Network Fundamentals</div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Stake Participation</div>
+          <div class="metric-val"><span id="m-stake-val">—</span><span class="metric-unit">%</span></div>
+          <div class="metric-sub"><span id="m-stake-sub">—</span>M DCR locked</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Treasury Runway</div>
+          <div class="metric-val">
+            <span id="m-runway-mo">—</span><span class="metric-unit"> mo</span>
+            <span class="metric-years">(<span id="m-runway-yr">—</span> years)</span>
+          </div>
+          <div class="metric-sub"><span id="m-treasury-sub">—</span></div>
+          <div class="metric-sub metric-sub-dim">Spending capped at 4%/mo by DCP-0013</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Ticket Pool</div>
+          <div class="metric-val" id="m-pool-size">—</div>
+          <div class="metric-sub">Target: 40,960 &middot; <span class="pos" id="m-pool-pct">—</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Privacy Mix</div>
+          <div class="metric-val"><span id="m-mix-val">—</span><span class="metric-unit">%</span></div>
+          <div class="metric-sub">StakeShuffle active</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ▸ REWARD FLOW (SANKEY) -->
+    <section class="sankey-section fade-in delay-8">
+      <div class="section-label">Block Reward Distribution (Post-Block 794,368)</div>
+      <div class="sankey-wrapper">
+        <div class="sankey-container">
+          <div class="sankey-col sankey-source">
+            <div class="sankey-node s-node-source">
+              <div class="sankey-node-val">1 BLK</div>
+              <div class="sankey-node-label">100% Emission</div>
+            </div>
+          </div>
+          <div class="sankey-middle">
+            <svg class="sankey-svg" preserveAspectRatio="none" viewBox="0 0 100 100">
+              <path class="path-miners" d="M 0,0 C 50,0 50,0 100,0 L 100,15 C 50,15 50,1 0,1 Z" />
+              <path class="path-treasury" d="M 0,1 C 50,1 50,17 100,17 L 100,42 C 50,42 50,11 0,11 Z" />
+              <path class="path-stakers" d="M 0,11 C 50,11 50,44 100,44 L 100,100 C 50,100 50,100 0,100 Z" />
+            </svg>
+          </div>
+          <div class="sankey-col sankey-target">
+            <div class="sankey-node s-node-miners">
+              <div class="sankey-node-val">1%</div>
+              <div class="sankey-node-label">PoW Miners</div>
+            </div>
+            <div class="sankey-node s-node-treasury">
+              <div class="sankey-node-val">10%</div>
+              <div class="sankey-node-label">Treasury</div>
+            </div>
+            <div class="sankey-node s-node-stakers">
+              <div class="sankey-node-val hl-stakers">89%</div>
+              <div class="sankey-node-label">PoS Stakers</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="compare-note">
+        100% of the new supply is directed by code. The vast majority of new issuance is paid directly to existing holders who physically lock their capital, neutralizing the structural sell pressure typical of pure PoW networks.
+      </div>
+    </section>
+
+    <!-- ▸ CLOSING -->
+    <section class="closing fade-in delay-8">
+      <p>
+        <strong><span id="cl-locked-pct">—</span>% of all mined DCR is locked</strong> and cannot be sold without a 142-day
+        unbonding period. The liquid supply is <span class="acc"><span id="cl-liquid-pct">—</span>% of mined coins</span>
+        — and shrinking with every ticket purchased.
+      </p>
+    </section>
+
+    <!-- ▸ FOOTER -->
+    <footer class="footer fade-in delay-8">
+      <div class="footer-left">
+        Data: dcrdata.decred.org &middot; CoinGecko<br />
+        Updated: Live
+      </div>
+      <div class="footer-right">Fair launch. No ICO. No VCs.</div>
+    </footer>
+
+  </main>
+
+  <script type="module" src="/assets/js/main.js"></script>
+</body>
+
+</html>
